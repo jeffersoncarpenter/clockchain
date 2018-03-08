@@ -1,3 +1,3 @@
-bin_PROGRAMS = hello
-hello_SOURCES = block.cpp main.cpp mine.cpp sql.cpp
-hello_LDFLAGS = $(libcrypto_LIBS)
+bin_PROGRAMS = main
+main_SOURCES = block.cpp main.cpp mine.cpp sql.cpp
+main_LDFLAGS = $(libcrypto_LIBS)
