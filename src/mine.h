@@ -3,7 +3,7 @@
 
 #include "block.h"
 
-double computeDifficulty(double prevDefficulty, Block prevBlock, Block block);
+double computeDifficulty(double prevDefficulty, double latestBlockTime);
 void mine();
 
 #endif

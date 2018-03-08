@@ -10,11 +10,8 @@
 
 using CryptoPP::SHA256;
 
-double computeDifficulty(double prevDifficulty, Block prevBlock, Block nextBlock) {
-    int prevBlockMS = block_milliseconds(prevBlock);
-    int nextBlockMS = block_milliseconds(nextBlock);
-    int dMS = std::max(1, nextBlockMS - prevBlockMS);
-    double targetDifficultyFactor = (double)targetMillisecondsPerBlock / dMS;
+double computeDifficulty(double prevDifficulty, double latestBlockTime) {
+    double targetDifficultyFactor = (double)targetMillisecondsPerBlock / latestBlockTime;
     double targetDifficulty = prevDifficulty * targetDifficultyFactor;
     double newDifficultyPreClamp =
         prevDifficulty * (1.0 - difficultyAdjustmentRate) +
