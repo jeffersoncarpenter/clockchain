@@ -32,9 +32,9 @@ void mine() {
     memcpy(block.magicNumber, magicNumber, 4);
     hash_block(block.hashPrevBlock, prevBlock);
 
-    set_big_block_array(&block.nonce, 0);
+    set_big_block_array(block.nonce, 0);
     do {
-        increment_big_block_array(&block.nonce);
+        increment_big_block_array(block.nonce);
         hash_block(currentHash, block);
     } while (true);
 }

@@ -1,4 +1,5 @@
 #include <cassert>
+#include <limits>
 
 #include <crypto++/sha.h>
 
@@ -6,12 +7,12 @@
 
 using CryptoPP::SHA256;
 
-void increment_big_block_array(Big_block_array *arr) {
+void increment_big_block_array(Big_block_array &arr) {
     uint8_t carry = 1;
     int i = 0;
-    int size = arr->data.size();
+    int size = arr.data.size();
     while (carry && i < size) {
-        uint8_t &num = (uint8_t&)arr->data[i];
+        uint8_t &num = (uint8_t&)arr.data[i];
         if (num == 0xFF) {
             num = 0;
         }
@@ -22,52 +23,47 @@ void increment_big_block_array(Big_block_array *arr) {
         i++;
     }
     if (carry) {
-        arr->data.push_back(uint8_t(1));
+        arr.data.push_back(uint8_t(1));
     }
 }
 
-void set_big_block_array(Big_block_array *arr, uint64_t num) {
-    arr->data.clear();
-    while (num) {
-        arr->data.push_back(0xFF & num);
-        num >>= 8;
+void set_big_block_array(Big_block_array &arr, uint64_t const &num) {
+    uint64_t num_local = num;
+    arr.data.clear();
+    while (num_local) {
+        arr.data.push_back(0xFF & num_local);
+        num_local >>= 8;
     }
 }
 
-void get_big_block_array(uint64_t *num, const Big_block_array *arr) {
-    uint32_t size = arr->data.size();
-    assert(size <= 4);
-    *num = 0;
+void get_big_block_array(uint64_t &num, Big_block_array const &arr) {
+    int size = arr.data.size();
+    assert(size <= sizeof(uint64_t));
+    num = 0;
     for (uint32_t i = 0; i < size; i++) {
-        *num |= uint64_t(arr->data[i]) << (8 * i);
+        num |= uint64_t(arr.data[i]) << (8 * i);
     }
 }
 
-void deserialize_big_block_array(Big_block_array *x, const std::vector<byte> *vecPtr) {
-    const std::vector<byte> &vec = *vecPtr;
-    x->data = {};
-    if (vec.size() == 0) {
+void deserialize_big_block_array(Big_block_array &x, byte* const data) {
+    uint8_t dataLength0 = data[0];
+    assert(dataLength0 > 0);
+    x.data.resize(dataLength0);
+    memcpy(x.data.data(), data + 1, dataLength0);
+}
+
+void serialize_big_block_array(byte *&vecPtr, const Big_block_array &x) {
+    uint64_t size = x.data.size();
+    assert(size < std::numeric_limits<uint8_t>::max());
+    if (size == 0) {
+        vecPtr = new byte[2];
+        vecPtr[0] = 1;
+        vecPtr[1] = 0;
         return;
     }
-    uint8_t length = uint8_t(vec[0]);
-    assert(length > 0); // TODO: support representations of integers longer than 2048 bits
-    for (uint8_t i = 0; i < length; i++) {
-        x->data.push_back(vec[i + 1]);
-    }
-}
-
-void serialize_big_block_array(std::vector<byte> *vecPtr, const Big_block_array *x) {
-    std::vector<byte> &vec = *vecPtr;
-    uint8_t size = x->data.size();
-    assert(size < 256); // TODO: support representations of integers longer than 2048 bits
-    if (size == 0) {
-        vec = {0};
-        size = 1;
-    }
-    else {
-        vec = x->data;
-    }
-    vec.insert(vec.begin(), size);
+    vecPtr = new byte[size + 1];
+    vecPtr[0] = size;
+    memcpy(vecPtr + 1, x.data.data(), size);
 }
 
 uint64_t block_milliseconds(Block block) {
@@ -81,7 +77,22 @@ uint64_t block_milliseconds(Block block) {
     return res;
 }
 
-void hash_block(byte *hash, Block block) {
+void serialize_block(byte *data, const Block &block) {
+    // make room for magic number and previous block hash
+    unsigned int dataLength = 36;
+
+    // make room for timestamp
+    uint8_t timestampLength0 = block.timestamp.data[0];
+    assert(timestampLength0 > 0);
+    dataLength += 1 + timestampLength0;
+
+    // make room for nonce
+    uint8_t nonceLength0 = block.nonce.data[0];
+    assert(nonceLength0 > 0);
+    dataLength += 1 + nonceLength0;
+}
+
+void hash_block(byte *hash, const Block &block) {
     byte data[72];
 
     memcpy(data, block.magicNumber, 4);

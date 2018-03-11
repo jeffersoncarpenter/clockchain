@@ -19,9 +19,9 @@ struct Block {
     Big_block_array nonce;
 };
 
-void increment_big_block_array(Big_block_array*);
-void set_big_block_array(Big_block_array*, uint64_t);
-void get_big_block_array(uint64_t*, const Big_block_array*);
+void increment_big_block_array(Big_block_array&);
+void set_big_block_array(Big_block_array&, uint64_t const&);
+void get_big_block_array(uint64_t&, Big_block_array const&);
 
 // Serialize and deserialize Big_block_array values representing
 // unsigned integers.  Serialization format is as follows:
@@ -57,10 +57,10 @@ void get_big_block_array(uint64_t*, const Big_block_array*);
 // arbitrarily large numbers in the far future within the confines of
 // our universe.  There's a difference between building for tomorrow,
 // and building for the end of time.
-void deserialize_big_block_array(Big_block_array*, const std::vector<byte>*);
-void serialize_big_block_array(std::vector<byte>*, const Big_block_array*);
+void deserialize_big_block_array(Big_block_array&, byte* const);
+void serialize_big_block_array(byte*&, const Big_block_array&);
 
 uint64_t block_milliseconds(Block);
-void hash_block(byte*, Block);
+void hash_block(byte*, const Block&);
 
 #endif
